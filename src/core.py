@@ -5,6 +5,7 @@ import asyncio
 from colorama import *
 from urllib.parse import unquote
 from json.decoder import JSONDecodeError
+import aiohttp
 from aiohttp import ClientSession
 from src.cucumber import (log, read_config, countdown_timer,
                           hju, mrh, htm, kng, bru, pth)
@@ -259,7 +260,11 @@ class GoatsBot:
         'Authorization': f"Bearer {self.access_token}",
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         }
-        resp = await self.http.post(f"https://api-checkin.goatsbot.xyz/checkin/action/{checkin_data['_id']}", headers=headers)
+        try:
+            resp = await self.http.post(f"https://api-checkin.goatsbot.xyz/checkin/action/{checkin_data['_id']}", headers=headers)
+        except aiohttp.ClientOSError as e:
+            print(f"Request failed: {e}")
+            # Optionally retry or handle the error
         resp = self.decode_json(await resp.text())
         if resp.get("statusCode") == 400:
             log(kng + f"You have already checkin today")
@@ -332,7 +337,8 @@ class GoatsBot:
             log(kng + f"No slot machine coins available.")
 
         block_id = 2373
-        await self.watch(block_id, self.user_id)
+        if user_data:
+            await self.watch(block_id, self.user_id)
         await self.http.close()
 
         print(pth + f"~" * 60)
