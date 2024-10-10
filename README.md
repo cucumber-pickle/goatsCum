@@ -4,6 +4,12 @@ GoatsBot is an automation script for completing missions, checking in, and spinn
 
 [TELEGRAM CHANNEL](https://t.me/cucumber_scripts)
 
+# Warning
+- All risks are borne by the user!
+- tgWebAppData (query_id / user_id)  for the goats bot must be updated once every 1 day
+
+
+
 ## Updates
 - **10.10.24** Fixed the error of adding tokens to the token.json
 
