@@ -3,7 +3,7 @@ import json
 import random
 import asyncio
 from colorama import *
-from urllib.parse import unquote
+from urllib.parse import parse_qs
 from json.decoder import JSONDecodeError
 import aiohttp
 from aiohttp import ClientSession
@@ -34,10 +34,9 @@ class GoatsBot:
 
     @staticmethod
     def extract_user_data(auth_data: str) -> dict:
-        try:
-            return json.loads(unquote(auth_data).split("user=")[1].split("&auth")[0])
-        except (IndexError, JSONDecodeError):
-            return {}
+        query_params = parse_qs(auth_data)
+        user_info = json.loads(query_params['user'][0])
+        return user_info
 
     @staticmethod
     def decode_json(text: str) -> dict:
