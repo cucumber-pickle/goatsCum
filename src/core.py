@@ -87,8 +87,10 @@ class GoatsBot:
             if resp_json.get("statusCode"):
                 log(f"Error while logging in | {resp_json['message']}")
                 return False
-
-            access_token = resp_json["tokens"]["access"]["token"]
+            try:
+                access_token = resp_json["tokens"]["access"]["token"]
+            except:
+                return False
             self.access_token = access_token
             self.http.headers["Authorization"] = f"Bearer {access_token}"
             await self.save_local_token(self.user_id, access_token)
