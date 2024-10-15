@@ -66,35 +66,48 @@ class GoatsBot:
         return proxies
 
     async def login(self) -> bool:
-        proxy_url = self.get_proxy_url()
         headers = {
             "Rawdata": self.auth_data,
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
         }
-        async with self.http.post(
-            "https://dev-api.goatsbot.xyz/auth/login",
-            data={},
-            headers=headers,
-            proxy=proxy_url
-        ) as resp:
-            resp_text = await resp.text()
+        while True:
+            proxy_url = self.get_proxy_url()
             try:
-                resp_json = self.decode_json(resp_text)
-            except Exception as e:
-                log(f"Error decoding login response: {e}")
-                return False
+                async with self.http.post(
+                    "https://dev-api.goatsbot.xyz/auth/login",
+                    data={},
+                    headers=headers,
+                    proxy=proxy_url
+                ) as resp:
+                    resp_text = await resp.text()
+                    try:
+                        resp_json = self.decode_json(resp_text)
+                    except Exception as e:
+                        log(f"Error decoding login response: {e}")
+                        return False
 
-            if resp_json.get("statusCode"):
-                log(f"Error while logging in | {resp_json['message']}")
-                return False
-            try:
-                access_token = resp_json["tokens"]["access"]["token"]
-            except:
-                return False
-            self.access_token = access_token
-            self.http.headers["Authorization"] = f"Bearer {access_token}"
-            await self.save_local_token(self.user_id, access_token)
-            return True
+                    if resp_json.get("statusCode"):
+                        log(f"Error while logging in | {resp_json['message']}")
+                        return False
+                    try:
+                        access_token = resp_json["tokens"]["access"]["token"]
+                    except:
+                        return False
+                    self.access_token = access_token
+                    self.http.headers["Authorization"] = f"Bearer {access_token}"
+                    await self.save_local_token(self.user_id, access_token)
+                    return True
+
+            except aiohttp.ClientError as e:  # Catching aiohttp specific exceptions
+
+                log(f'Proxy failed: {proxy_url}. Error: {str(e)}. Trying random proxy...')
+                proxies = self.get_proxies()
+                if proxies:
+                    self.proxy = random.choice(proxies)
+                else:
+                    log("No more proxies available.")
+                    return False
+
 
     async def user_data(self) -> dict:
         token_data = await self.get_local_token(self.user_id)
